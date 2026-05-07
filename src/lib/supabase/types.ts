@@ -16,6 +16,7 @@ export type Database = {
           code?: string
           name?: string
         }
+        Relationships: []
       }
       questions: {
         Row: {
@@ -54,6 +55,14 @@ export type Database = {
           explanation?: string | null
           created_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: 'questions_subject_code_fkey'
+            columns: ['subject_code']
+            referencedRelation: 'subjects'
+            referencedColumns: ['code']
+          }
+        ]
       }
       tags: {
         Row: {
@@ -71,6 +80,7 @@ export type Database = {
           subject_code?: string | null
           name?: string
         }
+        Relationships: []
       }
       question_tags: {
         Row: {
@@ -85,6 +95,20 @@ export type Database = {
           question_id?: number
           tag_id?: number
         }
+        Relationships: [
+          {
+            foreignKeyName: 'question_tags_question_id_fkey'
+            columns: ['question_id']
+            referencedRelation: 'questions'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'question_tags_tag_id_fkey'
+            columns: ['tag_id']
+            referencedRelation: 'tags'
+            referencedColumns: ['id']
+          }
+        ]
       }
       question_images: {
         Row: {
@@ -108,6 +132,14 @@ export type Database = {
           display_order?: number
           uploaded_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: 'question_images_question_id_fkey'
+            columns: ['question_id']
+            referencedRelation: 'questions'
+            referencedColumns: ['id']
+          }
+        ]
       }
       user_logs: {
         Row: {
@@ -116,7 +148,7 @@ export type Database = {
           session_id: string
           question_id: number
           is_correct: boolean
-          confidence_flag: string | null
+          confidence_flag: 'confident' | 'guess' | null
           answered_at: string
         }
         Insert: {
@@ -125,7 +157,7 @@ export type Database = {
           session_id: string
           question_id: number
           is_correct: boolean
-          confidence_flag?: string | null
+          confidence_flag?: 'confident' | 'guess' | null
           answered_at?: string
         }
         Update: {
@@ -134,10 +166,22 @@ export type Database = {
           session_id?: string
           question_id?: number
           is_correct?: boolean
-          confidence_flag?: string | null
+          confidence_flag?: 'confident' | 'guess' | null
           answered_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: 'user_logs_question_id_fkey'
+            columns: ['question_id']
+            referencedRelation: 'questions'
+            referencedColumns: ['id']
+          }
+        ]
       }
     }
+    Views: { [_ in never]: never }
+    Functions: { [_ in never]: never }
+    Enums: { [_ in never]: never }
+    CompositeTypes: { [_ in never]: never }
   }
 }
