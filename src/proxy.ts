@@ -26,7 +26,17 @@ export async function proxy(request: NextRequest) {
   )
 
   // セッションの有効期限を自動更新（これを削除しないこと）
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const path = request.nextUrl.pathname
+  const isPublic = path === '/login' || path.startsWith('/auth')
+
+  if (!user && !isPublic) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+  if (user && path === '/login') {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
 
   return supabaseResponse
 }

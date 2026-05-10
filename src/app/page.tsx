@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import SubjectGrid, { type YearRow } from '@/components/SubjectGrid'
+import SignOutButton from '@/components/SignOutButton'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -21,7 +22,10 @@ export default async function Home() {
 
   return (
     <main className="max-w-6xl mx-auto px-4 md:px-8 py-8">
-      <h1 className="text-xl font-bold text-gray-900 mb-1">中小企業診断士</h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="text-xl font-bold text-gray-900">中小企業診断士</h1>
+        <SignOutButton />
+      </div>
       <p className="text-sm text-gray-500 mb-6">科目・年度を選んで演習を開始してください</p>
       <SubjectGrid rows={rows} />
     </main>
