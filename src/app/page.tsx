@@ -1,30 +1,29 @@
 import { createClient } from '@/lib/supabase/server'
+import SubjectGrid, { type YearRow } from '@/components/SubjectGrid'
 
 export default async function Home() {
   const supabase = await createClient()
-  const { data: subjects, error } = await supabase.from('subjects').select('*')
+  const { data } = await supabase
+    .from('questions')
+    .select('subject_code, year')
+
+  // subject_code + year ごとに件数を集計
+  const countMap = new Map<string, number>()
+  for (const row of data ?? []) {
+    const key = `${row.subject_code}::${row.year}`
+    countMap.set(key, (countMap.get(key) ?? 0) + 1)
+  }
+
+  const rows: YearRow[] = Array.from(countMap.entries()).map(([key, count]) => {
+    const [subject_code, year] = key.split('::')
+    return { subject_code, year: Number(year), count }
+  })
 
   return (
-    <main className="p-8 font-sans">
-      <h1 className="text-2xl font-bold mb-4">Supabase 接続テスト</h1>
-
-      {error ? (
-        <div className="rounded bg-red-100 p-4 text-red-800">
-          <p className="font-semibold">接続エラー</p>
-          <pre className="mt-2 text-sm">{error.message}</pre>
-        </div>
-      ) : (
-        <div className="rounded bg-green-100 p-4 text-green-800">
-          <p className="font-semibold">接続成功 — subjects テーブル ({subjects?.length} 件)</p>
-          <ul className="mt-2 space-y-1 text-sm">
-            {subjects?.map((s) => (
-              <li key={s.code}>
-                <span className="font-mono">{s.code}</span>　{s.name}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+    <main className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+      <h1 className="text-xl font-bold text-gray-900 mb-1">中小企業診断士</h1>
+      <p className="text-sm text-gray-500 mb-6">科目・年度を選んで演習を開始してください</p>
+      <SubjectGrid rows={rows} />
     </main>
   )
 }
