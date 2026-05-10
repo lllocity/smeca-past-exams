@@ -278,7 +278,7 @@ CREATE TABLE questions (
     id             BIGSERIAL PRIMARY KEY,
     subject_code   VARCHAR(10) NOT NULL REFERENCES subjects(code) ON DELETE RESTRICT,
     year           INT NOT NULL,
-    question_number INT NOT NULL,
+    question_number NUMERIC(5,1) NOT NULL,  -- 整数問: 1, 設問構造: 10.1, 10.2
     points         INT NOT NULL DEFAULT 4,
     question_text  TEXT NOT NULL,
     options        JSONB NOT NULL,           -- [{"label":"ア","text":"..."},...]
