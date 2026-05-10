@@ -45,7 +45,7 @@ function validate(q: unknown): q is GeminiQuestion {
   )
 }
 
-export async function POST(request: NextRequest) {
+async function handleImport(request: NextRequest, overwrite: boolean) {
   // 認証
   const authHeader = request.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.IMPORT_SECRET}`) {
@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
 
   const supabase = createAdminClient()
   let inserted = 0
+  let updated = 0
   let skipped = 0
   const errors: string[] = []
 
@@ -75,7 +76,6 @@ export async function POST(request: NextRequest) {
       continue
     }
 
-    // questions テーブルに挿入（重複はスキップ）
     const { data: inserted_row, error: qError } = await supabase
       .from('questions')
       .insert({
@@ -93,18 +93,41 @@ export async function POST(request: NextRequest) {
 
     if (qError) {
       if (qError.code === '23505') {
-        // UNIQUE 制約違反 = 既存レコード → id を取得してタグ処理へ
-        skipped++
-        const { data: existing } = await supabase
-          .from('questions')
-          .select('id')
-          .eq('subject_code', item.subject_code)
-          .eq('year', item.year)
-          .eq('question_number', item.question_number)
-          .single()
+        if (overwrite) {
+          // PUT モード: 既存レコードを UPDATE
+          const { data: existing } = await supabase
+            .from('questions')
+            .update({
+              points: item.points,
+              question_text: item.question_text,
+              options: item.options,
+              correct_answer: item.correct_answer,
+              explanation: item.explanation ?? null,
+            })
+            .eq('subject_code', item.subject_code)
+            .eq('year', item.year)
+            .eq('question_number', item.question_number)
+            .select('id')
+            .single()
 
-        if (existing) {
-          await upsertTags(supabase, existing.id, item.subject_code, item.tags)
+          if (existing) {
+            updated++
+            await upsertTags(supabase, existing.id, item.subject_code, item.tags)
+          }
+        } else {
+          // POST モード: スキップしてタグのみ同期
+          skipped++
+          const { data: existing } = await supabase
+            .from('questions')
+            .select('id')
+            .eq('subject_code', item.subject_code)
+            .eq('year', item.year)
+            .eq('question_number', item.question_number)
+            .single()
+
+          if (existing) {
+            await upsertTags(supabase, existing.id, item.subject_code, item.tags)
+          }
         }
       } else {
         errors.push(`Q${item.question_number}: ${qError.message}`)
@@ -118,7 +141,15 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ inserted, skipped, errors })
+  return NextResponse.json({ inserted, updated, skipped, errors })
+}
+
+export async function POST(request: NextRequest) {
+  return handleImport(request, false)
+}
+
+export async function PUT(request: NextRequest) {
+  return handleImport(request, true)
 }
 
 async function upsertTags(
@@ -128,7 +159,6 @@ async function upsertTags(
   tags: string[]
 ) {
   for (const tagName of tags) {
-    // tags テーブルに upsert してIDを取得
     const { data: tag } = await supabase
       .from('tags')
       .upsert({ subject_code: subjectCode, name: tagName }, { onConflict: 'subject_code,name' })
@@ -139,7 +169,7 @@ async function upsertTags(
       await supabase
         .from('question_tags')
         .insert({ question_id: questionId, tag_id: tag.id })
-        .then(() => {}, () => {}) // ON CONFLICT DO NOTHING 相当
+        .then(() => {}, () => {})
     }
   }
 }
