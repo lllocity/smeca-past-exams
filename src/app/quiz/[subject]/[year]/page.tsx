@@ -27,9 +27,11 @@ export default async function QuizPage({
 
   if (!questions || questions.length === 0) notFound()
 
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
     <main className="max-w-4xl mx-auto px-4 md:px-8 py-6">
-      <QuizSession questions={questions} subject={subjectUpper} year={yearNum} />
+      <QuizSession questions={questions} subject={subjectUpper} year={yearNum} userId={user!.id} />
     </main>
   )
 }

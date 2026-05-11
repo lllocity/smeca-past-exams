@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import type { Database } from '@/lib/supabase/types'
+import { createClient } from '@/lib/supabase/client'
 
 type Question = Database['public']['Tables']['questions']['Row']
 type Option = { label: string; text: string }
@@ -22,13 +23,17 @@ export default function QuizSession({
   questions,
   subject,
   year,
+  userId,
 }: {
   questions: Question[]
   subject: string
   year: number
+  userId: string
 }) {
+  const [sessionId] = useState(() => crypto.randomUUID())
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
+  const [confidenceFlag, setConfidenceFlag] = useState<'confident' | 'guess' | null>(null)
   const totalPoints = questions.reduce((sum, q) => sum + q.points, 0)
   const [score, setScore] = useState({ correct: 0, answered: 0, points: 0 })
 
@@ -49,14 +54,42 @@ export default function QuizSession({
     }))
   }
 
+  async function handleConfidence(flag: 'confident' | 'guess') {
+    if (!question) return
+    setConfidenceFlag(flag)
+    const supabase = createClient()
+    await supabase.from('user_logs').insert({
+      user_id: userId,
+      session_id: sessionId,
+      question_id: question.id,
+      is_correct: true,
+      confidence_flag: flag,
+    })
+  }
+
+  async function handleIncorrectNext() {
+    if (!question) return
+    const supabase = createClient()
+    await supabase.from('user_logs').insert({
+      user_id: userId,
+      session_id: sessionId,
+      question_id: question.id,
+      is_correct: false,
+      confidence_flag: null,
+    })
+    handleNext()
+  }
+
   function handleNext() {
     setCurrentIndex((i) => i + 1)
     setSelectedAnswer(null)
+    setConfidenceFlag(null)
   }
 
   function handleReset() {
     setCurrentIndex(0)
     setSelectedAnswer(null)
+    setConfidenceFlag(null)
     setScore({ correct: 0, answered: 0, points: 0 })
   }
 
@@ -190,10 +223,36 @@ export default function QuizSession({
         </div>
       )}
 
-      {/* 次へボタン */}
+      {/* 自信度フラグ（正解時のみ） */}
+      {isAnswered && (isAllCorrect || selectedAnswer === question!.correct_answer) && !confidenceFlag && (
+        <div className="space-y-2">
+          <p className="text-xs text-center text-gray-400">この問題の自信度は？</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleConfidence('confident')}
+              className="py-3 rounded-xl border-2 border-indigo-200 bg-indigo-50 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 transition-colors"
+            >
+              確信あり ✓
+            </button>
+            <button
+              onClick={() => handleConfidence('guess')}
+              className="py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-600 text-sm font-semibold hover:bg-gray-100 transition-colors"
+            >
+              なんとなく・勘 ?
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 次へボタン（不正解時は即表示、正解時は自信度選択後） */}
       {isAnswered && (
+        ((!isAllCorrect && selectedAnswer !== question!.correct_answer)) ||
+        confidenceFlag
+      ) && (
         <button
-          onClick={handleNext}
+          onClick={(!isAllCorrect && selectedAnswer !== question!.correct_answer) && !confidenceFlag
+            ? handleIncorrectNext
+            : handleNext}
           className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 active:bg-indigo-800 transition-colors"
         >
           {currentIndex + 1 < total ? '次の問題へ →' : '結果を見る'}
