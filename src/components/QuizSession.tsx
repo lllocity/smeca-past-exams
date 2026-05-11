@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import type { Database } from '@/lib/supabase/types'
@@ -24,24 +24,46 @@ export default function QuizSession({
   subject,
   year,
   userId,
+  history,
 }: {
   questions: Question[]
   subject: string
   year: number
   userId: string
+  history: Record<number, { correct: number; total: number }>
 }) {
-  const [sessionId] = useState(() => crypto.randomUUID())
+  const [sessionId, setSessionId] = useState(() => crypto.randomUUID())
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [confidenceFlag, setConfidenceFlag] = useState<'confident' | 'guess' | null>(null)
   const totalPoints = questions.reduce((sum, q) => sum + q.points, 0)
   const [score, setScore] = useState({ correct: 0, answered: 0, points: 0 })
+  const completionLoggedRef = useRef(false)
 
   const total = questions.length
   const isFinished = currentIndex >= total
   const question = isFinished ? null : questions[currentIndex]
   const isAnswered = selectedAnswer !== null
   const isAllCorrect = question?.correct_answer === '全員正解'
+
+  // 通しで完走したときだけ session_completions へ記録
+  useEffect(() => {
+    if (!isFinished || completionLoggedRef.current) return
+    completionLoggedRef.current = true
+    createClient()
+      .from('session_completions')
+      .insert({
+        user_id: userId,
+        session_id: sessionId,
+        subject_code: subject,
+        year: year,
+        correct: score.correct,
+        total: total,
+      })
+      .then(({ error }) => {
+        if (error) console.error('[session_completions] insert failed:', error)
+      })
+  }, [isFinished, sessionId, userId, subject, year, score.correct, total])
 
   function handleSelect(label: string) {
     if (isAnswered || !question) return
@@ -91,6 +113,8 @@ export default function QuizSession({
     setSelectedAnswer(null)
     setConfidenceFlag(null)
     setScore({ correct: 0, answered: 0, points: 0 })
+    setSessionId(crypto.randomUUID())
+    completionLoggedRef.current = false
   }
 
   function optionStyle(label: string): string {
@@ -134,6 +158,12 @@ export default function QuizSession({
             もう一度
           </button>
           <Link
+            href="/dashboard"
+            className="w-full py-3 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 text-center text-sm font-semibold hover:bg-indigo-100 transition-colors"
+          >
+            ダッシュボードを確認
+          </Link>
+          <Link
             href="/"
             className="w-full py-3 rounded-xl border border-gray-200 text-gray-600 text-center text-sm hover:bg-gray-50 transition-colors"
           >
@@ -145,6 +175,7 @@ export default function QuizSession({
   }
 
   const options = (question!.options as Option[]) ?? []
+  const questionHistory = history[question!.id]
 
   return (
     <div className="space-y-4">
@@ -200,20 +231,27 @@ export default function QuizSession({
       {/* 解説 */}
       {isAnswered && (
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-2">
-          <div className="flex items-center gap-2">
-            {isAllCorrect || selectedAnswer === question!.correct_answer ? (
-              <span className="text-green-600 font-semibold text-sm">✓ 正解</span>
-            ) : (
-              <span className="text-red-600 font-semibold text-sm">✗ 不正解</span>
-            )}
-            {!isAllCorrect && (
-              <span className="text-xs text-gray-500">
-                正解: {question!.correct_answer}
-              </span>
-            )}
-            {isAllCorrect && (
-              <span className="text-xs text-gray-500">全員正解問題</span>
-            )}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {isAllCorrect || selectedAnswer === question!.correct_answer ? (
+                <span className="text-green-600 font-semibold text-sm">✓ 正解</span>
+              ) : (
+                <span className="text-red-600 font-semibold text-sm">✗ 不正解</span>
+              )}
+              {!isAllCorrect && (
+                <span className="text-xs text-gray-500">
+                  正解: {question!.correct_answer}
+                </span>
+              )}
+              {isAllCorrect && (
+                <span className="text-xs text-gray-500">全員正解問題</span>
+              )}
+            </div>
+            <span className="text-xs text-gray-400">
+              {questionHistory
+                ? `過去の正答率: ${Math.round((questionHistory.correct / questionHistory.total) * 100)}%（${questionHistory.correct}/${questionHistory.total}回）`
+                : '初挑戦'}
+            </span>
           </div>
           {question!.explanation && (
             <div className="prose prose-sm max-w-none text-gray-700">

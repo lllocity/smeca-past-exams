@@ -178,6 +178,46 @@ export type Database = {
           }
         ]
       }
+      session_completions: {
+        Row: {
+          id: number
+          user_id: string
+          session_id: string
+          subject_code: string
+          year: number
+          correct: number
+          total: number
+          completed_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          session_id: string
+          subject_code: string
+          year: number
+          correct: number
+          total: number
+          completed_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          session_id?: string
+          subject_code?: string
+          year?: number
+          correct?: number
+          total?: number
+          completed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'session_completions_user_id_fkey'
+            columns: ['user_id']
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: { [_ in never]: never }
     Functions: { [_ in never]: never }
