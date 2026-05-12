@@ -42,7 +42,24 @@ Claude Codeが提案や実装を行う際は、必ず以下のクロスレビュ
 - `npm run dev` : 開発サーバー起動
 - `npm run build` : Vercelデプロイ用ビルド
 - `npm run lint` : リンター実行
+- `npm run test` : テスト全件実行（Vitest）
+- `npm run test:watch` : ウォッチモードでテスト実行
 
 ## コーディング規約 / 指針
 - TypeScriptの型定義を厳格に行うこと。
 - コンポーネントは機能ごとに小さく分割し、軽量でレスポンシブな設計にすること。
+
+## テストポリシー
+
+**新機能・バグ修正を実装する際は、対応するユニットテストを必ず並行して作成すること。**
+
+- テストフレームワーク: Vitest + React Testing Library
+- テストファイルは `src/__tests__/` 以下に配置し、ソースのディレクトリ構造を踏襲する
+  - `src/__tests__/api/` — API ルートのバリデーションロジック
+  - `src/__tests__/lib/` — 純関数ユーティリティ
+  - `src/__tests__/components/` — Client Component の状態遷移・分岐
+- 純関数的なロジック（バリデーション・集計計算）はユニットテストで全分岐を網羅する
+- Client Component の状態遷移・UI 分岐は React Testing Library でコンポーネントテストを書く
+- Supabase クライアントは `vi.mock('@/lib/supabase/client')` でモックし、DB に依存しない形にする
+- Server Component は Supabase 依存が強いためテスト対象外とする（ROI が低い）
+- `npm run test` でテスト全件通過を確認してからコミットする
