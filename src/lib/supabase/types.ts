@@ -187,6 +187,7 @@ export type Database = {
           year: number
           correct: number
           total: number
+          points_earned: number
           completed_at: string
         }
         Insert: {
@@ -197,6 +198,7 @@ export type Database = {
           year: number
           correct: number
           total: number
+          points_earned?: number
           completed_at?: string
         }
         Update: {
@@ -207,6 +209,7 @@ export type Database = {
           year?: number
           correct?: number
           total?: number
+          points_earned?: number
           completed_at?: string
         }
         Relationships: [

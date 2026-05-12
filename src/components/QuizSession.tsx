@@ -59,6 +59,7 @@ export default function QuizSession({
         year: year,
         correct: score.correct,
         total: total,
+        points_earned: score.points,
       })
       .then(({ error }) => {
         if (error) console.error('[session_completions] insert failed:', error)
