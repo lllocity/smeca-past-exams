@@ -25,12 +25,14 @@ export default function QuizSession({
   year,
   userId,
   history,
+  imageMap = {},
 }: {
   questions: Question[]
   subject: string
   year: number
   userId: string
   history: Record<number, { correct: number; total: number }>
+  imageMap?: Record<number, string[]>
 }) {
   const [sessionId, setSessionId] = useState(() => crypto.randomUUID())
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -213,6 +215,16 @@ export default function QuizSession({
       <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed bg-white rounded-xl border border-gray-100 p-4">
         <ReactMarkdown>{question!.question_text}</ReactMarkdown>
       </div>
+
+      {/* 問題画像 */}
+      {(imageMap[question!.id] ?? []).length > 0 && (
+        <div className="space-y-2">
+          {(imageMap[question!.id] ?? []).map((url, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={i} src={url} alt={`問題図 ${i + 1}`} className="w-full rounded-xl border border-gray-100" />
+          ))}
+        </div>
+      )}
 
       {/* 選択肢 */}
       <div className="space-y-2">

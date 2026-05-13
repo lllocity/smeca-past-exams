@@ -116,12 +116,14 @@ export default async function ResultsPage({
           const tags = q.question_tags.flatMap((qt) => (qt.tags ? [qt.tags.name] : []))
 
           return (
-            <Link
+            <div
               key={q.id}
-              href={`/quiz/${subjectUpper}/${yearNum}/${q.question_number}`}
-              className="flex items-center justify-between gap-4 bg-white border border-gray-100 rounded-xl px-4 py-3 hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between gap-4 bg-white border border-gray-100 rounded-xl px-4 py-3"
             >
-              <div className="min-w-0">
+              <Link
+                href={`/quiz/${subjectUpper}/${yearNum}/${q.question_number}`}
+                className="min-w-0 flex-1 hover:opacity-70 transition-opacity"
+              >
                 <span className="text-sm text-gray-700 font-medium">
                   第{String(q.question_number)}問
                   <span className="text-xs text-gray-400 ml-1.5">({q.points}点)</span>
@@ -129,7 +131,7 @@ export default async function ResultsPage({
                 {tags.length > 0 && (
                   <span className="ml-2 text-xs text-gray-400">{tags.join(' / ')}</span>
                 )}
-              </div>
+              </Link>
               <div className="flex items-center gap-2 shrink-0">
                 {confidence && (
                   <span className="text-xs text-gray-400">{CONFIDENCE_LABEL[confidence]}</span>
@@ -147,8 +149,15 @@ export default async function ResultsPage({
                 ) : (
                   <span className="text-xs text-gray-300">未記録</span>
                 )}
+                <Link
+                  href={`/admin/${subjectUpper}/${yearNum}/${q.question_number}`}
+                  className="text-xs text-gray-300 hover:text-indigo-400 transition-colors"
+                  title="編集"
+                >
+                  ✎
+                </Link>
               </div>
-            </Link>
+            </div>
           )
         })}
       </div>

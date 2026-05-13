@@ -47,14 +47,26 @@ export default async function QuestionPermalinkPage({
 
   if (!question) notFound()
 
-  const { data: histLogs } = await supabase
-    .from('user_logs')
-    .select('is_correct')
-    .eq('user_id', user!.id)
-    .eq('question_id', question.id)
+  const [{ data: histLogs }, { data: imageRows }] = await Promise.all([
+    supabase
+      .from('user_logs')
+      .select('is_correct')
+      .eq('user_id', user!.id)
+      .eq('question_id', question.id),
+    supabase
+      .from('question_images')
+      .select('storage_path, display_order')
+      .eq('question_id', question.id)
+      .order('display_order', { ascending: true }),
+  ])
 
   const histCorrect = (histLogs ?? []).filter((l) => l.is_correct).length
   const histTotal = (histLogs ?? []).length
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const imageUrls = (imageRows ?? []).map(
+    (img) => `${supabaseUrl}/storage/v1/object/public/question-images/${img.storage_path}`,
+  )
 
   const options = (question.options as Option[]) ?? []
   const isAllCorrect = question.correct_answer === '全員正解'
@@ -84,6 +96,16 @@ export default async function QuestionPermalinkPage({
       <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed bg-white rounded-xl border border-gray-100 p-4">
         <ReactMarkdown>{question.question_text}</ReactMarkdown>
       </div>
+
+      {/* 問題画像 */}
+      {imageUrls.length > 0 && (
+        <div className="space-y-2">
+          {imageUrls.map((url, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={i} src={url} alt={`問題図 ${i + 1}`} className="w-full rounded-xl border border-gray-100" />
+          ))}
+        </div>
+      )}
 
       {/* 選択肢（正解を緑表示） */}
       <div className="space-y-2">

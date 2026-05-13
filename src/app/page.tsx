@@ -29,6 +29,9 @@ export default async function Home() {
           <Link href="/dashboard" className="text-xs text-indigo-500 hover:text-indigo-700 transition-colors">
             ダッシュボード
           </Link>
+          <Link href="/admin" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+            管理
+          </Link>
           <SignOutButton />
         </div>
       </div>

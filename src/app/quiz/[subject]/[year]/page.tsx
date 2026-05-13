@@ -30,17 +30,34 @@ export default async function QuizPage({
 
   if (!questions || questions.length === 0) notFound()
 
-  const { data: histLogs } = await supabase
-    .from('user_logs')
-    .select('question_id, is_correct')
-    .eq('user_id', user!.id)
-    .in('question_id', questions.map((q) => q.id))
+  const questionIds = questions.map((q) => q.id)
+  const [{ data: histLogs }, { data: imageRows }] = await Promise.all([
+    supabase
+      .from('user_logs')
+      .select('question_id, is_correct')
+      .eq('user_id', user!.id)
+      .in('question_id', questionIds),
+    supabase
+      .from('question_images')
+      .select('question_id, storage_path, display_order')
+      .in('question_id', questionIds)
+      .order('display_order', { ascending: true }),
+  ])
 
   const history: Record<number, { correct: number; total: number }> = {}
   for (const log of histLogs ?? []) {
     if (!history[log.question_id]) history[log.question_id] = { correct: 0, total: 0 }
     history[log.question_id].correct += log.is_correct ? 1 : 0
     history[log.question_id].total += 1
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const imageMap: Record<number, string[]> = {}
+  for (const img of imageRows ?? []) {
+    if (!imageMap[img.question_id]) imageMap[img.question_id] = []
+    imageMap[img.question_id].push(
+      `${supabaseUrl}/storage/v1/object/public/question-images/${img.storage_path}`,
+    )
   }
 
   return (
@@ -51,6 +68,7 @@ export default async function QuizPage({
         year={yearNum}
         userId={user!.id}
         history={history}
+        imageMap={imageMap}
       />
     </main>
   )
