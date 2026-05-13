@@ -34,7 +34,7 @@ export default async function AdminPage() {
   })
 
   return (
-    <main className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
+    <main className="w-full max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-gray-900">管理画面</h1>

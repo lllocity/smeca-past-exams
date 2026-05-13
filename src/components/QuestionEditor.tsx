@@ -144,9 +144,29 @@ export default function QuestionEditor({
         )}
       </section>
 
+      {/* 保存ボタン */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-6 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+        >
+          {saving ? '保存中...' : 'テキストを保存する'}
+        </button>
+        {saveStatus === 'saved' && (
+          <span className="text-sm text-green-600 font-medium">✓ 保存しました</span>
+        )}
+        {saveStatus === 'error' && (
+          <span className="text-sm text-red-600 font-medium">保存に失敗しました</span>
+        )}
+      </div>
+
       {/* 画像 */}
       <section className="space-y-3">
-        <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">画像</label>
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">画像</label>
+          <span className="text-xs text-gray-400">（アップロード後すぐに自動保存）</span>
+        </div>
 
         {images.length > 0 && (
           <div className="space-y-2">
@@ -195,23 +215,6 @@ export default function QuestionEditor({
           onChange={handleFileChange}
         />
       </section>
-
-      {/* 保存ボタン */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="px-6 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-        >
-          {saving ? '保存中...' : '保存する'}
-        </button>
-        {saveStatus === 'saved' && (
-          <span className="text-sm text-green-600 font-medium">✓ 保存しました</span>
-        )}
-        {saveStatus === 'error' && (
-          <span className="text-sm text-red-600 font-medium">保存に失敗しました</span>
-        )}
-      </div>
     </div>
   )
 }

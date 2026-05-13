@@ -47,7 +47,7 @@ export default async function AdminYearPage({
   const hasImage = new Set((images ?? []).map((i) => i.question_id))
 
   return (
-    <main className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
+    <main className="w-full max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <Link href="/admin" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
