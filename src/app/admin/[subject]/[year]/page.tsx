@@ -47,7 +47,7 @@ export default async function AdminYearPage({
   const hasImage = new Set((images ?? []).map((i) => i.question_id))
 
   return (
-    <main className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-6">
+    <main className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <Link href="/admin" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
@@ -61,7 +61,7 @@ export default async function AdminYearPage({
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 divide-y divide-gray-50">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {questions.map((q) => {
           const tags = (q.question_tags as { tags: { name: string } | null }[])
             .flatMap((qt) => (qt.tags ? [qt.tags.name] : []))
@@ -69,7 +69,7 @@ export default async function AdminYearPage({
             <Link
               key={q.id}
               href={`/admin/${subjectUpper}/${yearNum}/${q.question_number}`}
-              className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between gap-4 bg-white border border-gray-100 rounded-xl px-4 py-3 hover:bg-gray-50 transition-colors"
             >
               <div className="min-w-0">
                 <span className="text-sm font-medium text-gray-800">
@@ -82,7 +82,7 @@ export default async function AdminYearPage({
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 {hasImage.has(q.id) && (
-                  <span className="text-xs text-amber-500">🖼 画像あり</span>
+                  <span className="text-xs text-amber-500">🖼</span>
                 )}
                 <span className="text-xs text-gray-400">正解: {q.correct_answer}</span>
                 <span className="text-xs text-indigo-500">編集 →</span>

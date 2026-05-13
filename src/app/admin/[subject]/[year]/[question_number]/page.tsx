@@ -56,7 +56,7 @@ export default async function AdminQuestionPage({
   }))
 
   return (
-    <main className="max-w-4xl mx-auto px-4 md:px-8 py-8 space-y-6">
+    <main className="max-w-6xl mx-auto px-4 md:px-8 py-8 space-y-6">
       <div>
         <Link
           href={`/admin/${subjectUpper}/${yearNum}`}

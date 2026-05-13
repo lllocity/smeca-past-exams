@@ -30,10 +30,13 @@ export async function PATCH(
     .update(result.update)
     .eq('id', questionId)
     .select('id, question_text, explanation')
-    .single()
+    .maybeSingle()
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+  if (!data) {
+    return NextResponse.json({ error: 'Question not found' }, { status: 404 })
   }
 
   return NextResponse.json({ data })

@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     .eq('question_id', questionId)
     .order('display_order', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   const nextOrder = (existing?.display_order ?? 0) + 1
   const ext = actualFile.name.split('.').pop() ?? 'jpg'
