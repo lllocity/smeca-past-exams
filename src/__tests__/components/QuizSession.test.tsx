@@ -287,6 +287,49 @@ describe('QuizSession', () => {
     })
   })
 
+  describe('復習モード（isReview=true）', () => {
+    function renderReview(questions: Question[]) {
+      return render(
+        <QuizSession {...defaultProps} questions={questions} history={{}} isReview={true} />,
+      )
+    }
+
+    it('完了後に「復習完了」が表示される', async () => {
+      renderReview([makeQuestion()])
+      fireEvent.click(screen.getByText('選択肢B'))
+      fireEvent.click(screen.getByText(/結果を見る/))
+      await waitFor(() => expect(screen.getByText('復習完了')).toBeInTheDocument())
+    })
+
+    it('「演習完了」は表示されない', async () => {
+      renderReview([makeQuestion()])
+      fireEvent.click(screen.getByText('選択肢B'))
+      fireEvent.click(screen.getByText(/結果を見る/))
+      await waitFor(() => expect(screen.getByText('復習完了')).toBeInTheDocument())
+      expect(screen.queryByText('演習完了')).not.toBeInTheDocument()
+    })
+
+    it('isReview=true のとき session_completions に INSERT されない', async () => {
+      renderReview([makeQuestion()])
+      fireEvent.click(screen.getByText('選択肢B'))
+      fireEvent.click(screen.getByText(/結果を見る/))
+      await waitFor(() => expect(screen.getByText('復習完了')).toBeInTheDocument())
+      const sessionInserts = mockInsert.mock.calls.filter(
+        (call) => call[0] && 'total' in call[0],
+      )
+      expect(sessionInserts).toHaveLength(0)
+    })
+
+    it('「もう一度復習する」で第1問に戻る', async () => {
+      renderReview([makeQuestion()])
+      fireEvent.click(screen.getByText('選択肢B'))
+      fireEvent.click(screen.getByText(/結果を見る/))
+      await waitFor(() => screen.getByText('もう一度復習する'))
+      fireEvent.click(screen.getByText('もう一度復習する'))
+      expect(screen.getByText('設問テキスト')).toBeInTheDocument()
+    })
+  })
+
   describe('optionStyle（CSS クラス）', () => {
     it('未回答時はホバースタイルが含まれる', () => {
       renderQuiz([makeQuestion()])

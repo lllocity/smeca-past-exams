@@ -76,6 +76,7 @@ export default async function ResultsPage({
 
   const questions = (rawQuestions ?? []) as QResult[]
   const logMap = new Map((logs ?? []).map((l) => [l.question_id, l]))
+  const reviewCount = (logs ?? []).filter((l) => !l.is_correct || l.confidence_flag === 'guess').length
 
   const completedAt = new Date(completion.completed_at).toLocaleDateString('ja-JP', {
     year: 'numeric',
@@ -162,13 +163,23 @@ export default async function ResultsPage({
         })}
       </div>
 
-      {/* 再演習ボタン */}
-      <Link
-        href={`/quiz/${subjectUpper}/${yearNum}`}
-        className="block w-full py-3 rounded-xl bg-indigo-600 text-white text-center text-sm font-semibold hover:bg-indigo-700 transition-colors"
-      >
-        この年度を再演習する →
-      </Link>
+      {/* 復習・再演習ボタン */}
+      <div className="space-y-2">
+        {reviewCount > 0 && (
+          <Link
+            href={`/review/${subjectUpper}/${yearNum}`}
+            className="block w-full py-3 rounded-xl border-2 border-amber-400 bg-amber-50 text-amber-700 text-center text-sm font-semibold hover:bg-amber-100 transition-colors"
+          >
+            復習する（不正解・自信なし {reviewCount} 問）→
+          </Link>
+        )}
+        <Link
+          href={`/quiz/${subjectUpper}/${yearNum}`}
+          className="block w-full py-3 rounded-xl bg-indigo-600 text-white text-center text-sm font-semibold hover:bg-indigo-700 transition-colors"
+        >
+          この年度を再演習する →
+        </Link>
+      </div>
     </main>
   )
 }

@@ -26,6 +26,7 @@ export default function QuizSession({
   userId,
   history,
   imageMap = {},
+  isReview = false,
 }: {
   questions: Question[]
   subject: string
@@ -33,6 +34,7 @@ export default function QuizSession({
   userId: string
   history: Record<number, { correct: number; total: number }>
   imageMap?: Record<number, string[]>
+  isReview?: boolean
 }) {
   const [sessionId, setSessionId] = useState(() => crypto.randomUUID())
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -48,9 +50,9 @@ export default function QuizSession({
   const isAnswered = selectedAnswer !== null
   const isAllCorrect = question?.correct_answer === '全員正解'
 
-  // 通しで完走したときだけ session_completions へ記録
+  // 通しで完走したときだけ session_completions へ記録（復習モードはスキップ）
   useEffect(() => {
-    if (!isFinished || completionLoggedRef.current) return
+    if (!isFinished || completionLoggedRef.current || isReview) return
     completionLoggedRef.current = true
     createClient()
       .from('session_completions')
@@ -66,7 +68,7 @@ export default function QuizSession({
       .then(({ error }) => {
         if (error) console.error('[session_completions] insert failed:', error)
       })
-  }, [isFinished, sessionId, userId, subject, year, score.correct, total])
+  }, [isFinished, sessionId, userId, subject, year, score.correct, total, isReview])
 
   function handleSelect(label: string) {
     if (isAnswered || !question) return
@@ -138,6 +140,37 @@ export default function QuizSession({
 
   // 最終スコア画面
   if (isFinished) {
+    if (isReview) {
+      return (
+        <div className="text-center py-12 space-y-6">
+          <div>
+            <p className="text-sm text-gray-500">{SUBJECT_NAMES[subject]} {year} 年度 · 復習</p>
+            <h2 className="text-2xl font-bold text-gray-900 mt-1">復習完了</h2>
+          </div>
+          <div className="inline-flex flex-col items-center bg-indigo-50 rounded-2xl px-10 py-6">
+            <div className="flex items-baseline gap-1">
+              <span className="text-6xl font-bold text-indigo-600">{score.correct}</span>
+              <span className="text-xl text-gray-400 font-medium">/ {total} 問正解</span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleReset}
+              className="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors"
+            >
+              もう一度復習する
+            </button>
+            <Link
+              href={`/results/${subject}/${year}`}
+              className="w-full py-3 rounded-xl border border-gray-200 text-gray-600 text-center text-sm hover:bg-gray-50 transition-colors"
+            >
+              ← 結果に戻る
+            </Link>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="text-center py-12 space-y-6">
         <div>
