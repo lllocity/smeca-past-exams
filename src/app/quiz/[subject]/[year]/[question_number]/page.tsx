@@ -72,7 +72,7 @@ export default async function QuestionPermalinkPage({
   const isAllCorrect = question.correct_answer === '全員正解'
 
   return (
-    <main className="max-w-4xl mx-auto px-4 md:px-8 py-6 space-y-4">
+    <main className="w-full max-w-6xl mx-auto px-4 md:px-8 py-6 space-y-4">
       {/* ヘッダー */}
       <div className="flex items-start gap-4">
         <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm mt-0.5 shrink-0">
