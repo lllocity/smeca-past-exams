@@ -3,6 +3,7 @@ import {
   buildSubjectYearScores,
   buildWeakBySubject,
   buildDailyCount,
+  buildTagStats,
   type RawCompletion,
   type RawLog,
 } from '@/lib/dashboard-utils'
@@ -166,6 +167,96 @@ describe('buildWeakBySubject', () => {
     const logs = [logWithTag, makeLog({ question_id: 1 })]
     const result = buildWeakBySubject(logs)
     expect(result[0].questions[0].tags).toEqual(['需要曲線'])
+  })
+})
+
+// ── buildTagStats ─────────────────────────────────────────────────────────────
+
+function makeTagLog(tagNames: string[], overrides: Partial<RawLog> = {}): RawLog {
+  return {
+    question_id: 1,
+    is_correct: true,
+    answered_at: '2024-01-10T10:00:00Z',
+    questions: {
+      subject_code: 'ECO',
+      year: 2023,
+      question_number: 1,
+      question_tags: tagNames.map((name) => ({ tags: { name } })),
+    },
+    ...overrides,
+  }
+}
+
+describe('buildTagStats', () => {
+  it('空配列なら空を返す', () => {
+    expect(buildTagStats([])).toEqual([])
+  })
+
+  it('1回しか解いていないタグは除外される', () => {
+    const logs = [makeTagLog(['需給分析'])]
+    expect(buildTagStats(logs)).toEqual([])
+  })
+
+  it('2回以上解いたタグが含まれる', () => {
+    const logs = [
+      makeTagLog(['需給分析'], { question_id: 1, is_correct: false }),
+      makeTagLog(['需給分析'], { question_id: 2, is_correct: true }),
+    ]
+    const result = buildTagStats(logs)
+    expect(result).toHaveLength(1)
+    expect(result[0].tags[0]).toMatchObject({ tagName: '需給分析', correct: 1, total: 2 })
+  })
+
+  it('タグなし問題（question_tags 空配列）はスキップされる', () => {
+    const logs = [
+      makeTagLog([], { question_id: 1 }),
+      makeTagLog([], { question_id: 2 }),
+    ]
+    expect(buildTagStats(logs)).toEqual([])
+  })
+
+  it('複数科目が独立して集計される', () => {
+    const ecoLog = makeTagLog(['需給分析'], { question_id: 1 })
+    const finLog = makeTagLog(['CVP分析'], {
+      question_id: 2,
+      questions: { subject_code: 'FIN', year: 2023, question_number: 1, question_tags: [{ tags: { name: 'CVP分析' } }] },
+    })
+    const logs = [ecoLog, ecoLog, finLog, finLog]
+    const result = buildTagStats(logs)
+    expect(result.map((r) => r.subject)).toContain('ECO')
+    expect(result.map((r) => r.subject)).toContain('FIN')
+  })
+
+  it('正解率昇順（苦手順）にソートされる', () => {
+    const logs = [
+      // 需給分析: 0/2 = 0%
+      makeTagLog(['需給分析'], { question_id: 1, is_correct: false }),
+      makeTagLog(['需給分析'], { question_id: 2, is_correct: false }),
+      // 弾力性: 2/2 = 100%
+      makeTagLog(['弾力性'], { question_id: 3, is_correct: true }),
+      makeTagLog(['弾力性'], { question_id: 4, is_correct: true }),
+    ]
+    const result = buildTagStats(logs)
+    expect(result[0].tags[0].tagName).toBe('需給分析')
+    expect(result[0].tags[1].tagName).toBe('弾力性')
+  })
+
+  it('6タグ以上あっても上位5件に絞られる', () => {
+    const tagNames = ['タグA', 'タグB', 'タグC', 'タグD', 'タグE', 'タグF']
+    const logs = tagNames.flatMap((name, i) => [
+      makeTagLog([name], { question_id: i * 2, is_correct: false }),
+      makeTagLog([name], { question_id: i * 2 + 1, is_correct: false }),
+    ])
+    const result = buildTagStats(logs)
+    expect(result[0].tags).toHaveLength(5)
+  })
+
+  it('questions が null のログはスキップされる', () => {
+    const logs = [
+      makeTagLog(['需給分析'], { question_id: 1, questions: null }),
+      makeTagLog(['需給分析'], { question_id: 2, questions: null }),
+    ]
+    expect(buildTagStats(logs)).toEqual([])
   })
 })
 

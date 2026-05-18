@@ -101,6 +101,39 @@ export function buildWeakBySubject(logs: RawLog[]): WeakSubject[] {
   })
 }
 
+export type TagStat = { tagName: string; correct: number; total: number }
+export type TagSubjectStats = { subject: string; tags: TagStat[] }
+
+export function buildTagStats(logs: RawLog[]): TagSubjectStats[] {
+  const subjectTagMap = new Map<string, Map<string, { correct: number; total: number }>>()
+  for (const log of logs) {
+    const q = log.questions
+    if (!q) continue
+    const tagNames = q.question_tags.flatMap((qt) => (qt.tags ? [qt.tags.name] : []))
+    if (tagNames.length === 0) continue
+    if (!subjectTagMap.has(q.subject_code)) subjectTagMap.set(q.subject_code, new Map())
+    const tagMap = subjectTagMap.get(q.subject_code)!
+    for (const tagName of tagNames) {
+      const prev = tagMap.get(tagName) ?? { correct: 0, total: 0 }
+      tagMap.set(tagName, {
+        correct: prev.correct + (log.is_correct ? 1 : 0),
+        total: prev.total + 1,
+      })
+    }
+  }
+  return SUBJECT_ORDER.flatMap((subject) => {
+    const tagMap = subjectTagMap.get(subject)
+    if (!tagMap) return []
+    const tags = [...tagMap.entries()]
+      .filter(([, s]) => s.total >= 2)
+      .map(([tagName, s]) => ({ tagName, correct: s.correct, total: s.total }))
+      .sort((a, b) => a.correct / a.total - b.correct / b.total)
+      .slice(0, 5)
+    if (tags.length === 0) return []
+    return [{ subject, tags }]
+  })
+}
+
 export function buildDailyCount(
   logs: Pick<RawLog, 'answered_at'>[],
   today: Date = new Date(),

@@ -330,6 +330,25 @@ describe('QuizSession', () => {
     })
   })
 
+  describe('backHref prop', () => {
+    it('isReview=true + backHref 指定時、完了画面のリンクが backHref を指す', async () => {
+      render(
+        <QuizSession
+          {...defaultProps}
+          questions={[makeQuestion()]}
+          history={{}}
+          isReview={true}
+          backHref="/dashboard"
+        />,
+      )
+      fireEvent.click(screen.getByText('選択肢B'))
+      fireEvent.click(screen.getByText(/結果を見る/))
+      await waitFor(() => screen.getByText('復習完了'))
+      const link = screen.getByText('← 結果に戻る').closest('a')
+      expect(link?.getAttribute('href')).toBe('/dashboard')
+    })
+  })
+
   describe('optionStyle（CSS クラス）', () => {
     it('未回答時はホバースタイルが含まれる', () => {
       renderQuiz([makeQuestion()])

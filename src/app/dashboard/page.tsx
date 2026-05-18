@@ -4,6 +4,7 @@ import {
   buildSubjectYearScores,
   buildWeakBySubject,
   buildDailyCount,
+  buildTagStats,
   type RawLog,
   type RawCompletion,
 } from '@/lib/dashboard-utils'
@@ -42,6 +43,7 @@ export default async function DashboardPage() {
   const logs = (rawLogs ?? []) as RawLog[]
   const subjectYearScores = buildSubjectYearScores((completions ?? []) as RawCompletion[])
   const weakBySubject = buildWeakBySubject(logs)
+  const tagStats = buildTagStats(logs)
   const { days, maxDaily } = buildDailyCount(logs)
 
   return (
@@ -129,7 +131,8 @@ export default async function DashboardPage() {
           </section>
         </div>
 
-        {/* 右列: 苦手問題リスト */}
+        {/* 右列: 苦手問題リスト + 論点別正解率 */}
+        <div className="space-y-8">
         <section>
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
             苦手問題（科目別・複数回解いた問題）
@@ -176,6 +179,43 @@ export default async function DashboardPage() {
             </div>
           )}
         </section>
+
+        <section>
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">
+            論点別正解率（苦手タグ）
+          </h2>
+          {tagStats.length === 0 ? (
+            <p className="text-sm text-gray-400">タグ付き問題の解答がまだありません</p>
+          ) : (
+            <div className="space-y-4">
+              {tagStats.map(({ subject, tags }) => (
+                <div key={subject} className="bg-white rounded-xl border border-gray-100 p-5">
+                  <div className="text-xs font-semibold text-indigo-500 mb-3">
+                    {subject} — {SUBJECT_NAMES[subject]}
+                  </div>
+                  <div className="space-y-1.5">
+                    {tags.map(({ tagName, correct, total }) => {
+                      const pct = Math.round((correct / total) * 100)
+                      return (
+                        <Link
+                          key={tagName}
+                          href={`/quiz/${subject}/tag/${encodeURIComponent(tagName)}`}
+                          className="flex items-center justify-between gap-4 text-sm hover:bg-gray-50 rounded-lg px-2 py-1 -mx-2 transition-colors"
+                        >
+                          <span className="text-gray-700 font-medium truncate">{tagName}</span>
+                          <span className={`shrink-0 text-xs font-semibold ${pct < 50 ? 'text-red-500' : 'text-yellow-500'}`}>
+                            {pct}%（{correct}/{total}回）
+                          </span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+        </div>
       </div>
     </main>
   )

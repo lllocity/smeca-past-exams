@@ -17,6 +17,14 @@ const SUBJECT_ORDER = ['ECO', 'FIN', 'MGT', 'OPS', 'LAW', 'MIS', 'SME']
 
 export type YearRow = { subject_code: string; year: number; count: number }
 
+function yearLabel(years: YearRow[]): string {
+  if (years.length === 0) return 'データなし'
+  const sorted = [...years].sort((a, b) => a.year - b.year)
+  if (sorted.length === 1) return `${sorted[0].year}年度`
+  if (sorted.length === 2) return `${sorted[0].year}・${sorted[1].year}年度`
+  return `${sorted[0].year}〜${sorted[sorted.length - 1].year}年度`
+}
+
 export default function SubjectGrid({ rows }: { rows: YearRow[] }) {
   const [open, setOpen] = useState<string | null>(null)
 
@@ -43,7 +51,7 @@ export default function SubjectGrid({ rows }: { rows: YearRow[] }) {
                 {SUBJECT_NAMES[code]}
               </div>
               <div className="text-xs text-gray-400 mt-1">
-                {years.length > 0 ? `${years.length} 年度` : 'データなし'}
+                {yearLabel(years)}
               </div>
             </button>
 

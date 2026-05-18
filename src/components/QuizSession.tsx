@@ -27,6 +27,7 @@ export default function QuizSession({
   history,
   imageMap = {},
   isReview = false,
+  backHref,
 }: {
   questions: Question[]
   subject: string
@@ -35,6 +36,7 @@ export default function QuizSession({
   history: Record<number, { correct: number; total: number }>
   imageMap?: Record<number, string[]>
   isReview?: boolean
+  backHref?: string
 }) {
   const [sessionId, setSessionId] = useState(() => crypto.randomUUID())
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -144,7 +146,7 @@ export default function QuizSession({
       return (
         <div className="text-center py-12 space-y-6">
           <div>
-            <p className="text-sm text-gray-500">{SUBJECT_NAMES[subject]} {year} 年度 · 復習</p>
+            <p className="text-sm text-gray-500">{SUBJECT_NAMES[subject]}{year > 0 ? ` ${year} 年度` : ''} · 復習</p>
             <h2 className="text-2xl font-bold text-gray-900 mt-1">復習完了</h2>
           </div>
           <div className="inline-flex flex-col items-center bg-indigo-50 rounded-2xl px-10 py-6">
@@ -161,7 +163,7 @@ export default function QuizSession({
               もう一度復習する
             </button>
             <Link
-              href={`/results/${subject}/${year}`}
+              href={backHref ?? `/results/${subject}/${year}`}
               className="w-full py-3 rounded-xl border border-gray-200 text-gray-600 text-center text-sm hover:bg-gray-50 transition-colors"
             >
               ← 結果に戻る
@@ -223,7 +225,7 @@ export default function QuizSession({
         <div className="flex-1 min-w-0">
           <div className="text-xs font-mono text-indigo-400 font-medium">{subject}</div>
           <div className="text-base font-bold text-gray-800 leading-tight">{SUBJECT_NAMES[subject]}</div>
-          <div className="text-xs text-gray-400 mt-0.5">{year} 年度 · 全 {total} 問</div>
+          <div className="text-xs text-gray-400 mt-0.5">{year > 0 ? `${year} 年度 · ` : ''}全 {total} 問</div>
         </div>
         <span className="text-sm font-semibold text-indigo-600 shrink-0 mt-1">
           {score.correct} / {score.answered} 問正解
