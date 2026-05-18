@@ -77,6 +77,7 @@ export default async function AdminQuestionPage({
         questionId={question.id}
         initialQuestionText={question.question_text}
         initialExplanation={question.explanation ?? ''}
+        initialOptions={(question.options as { label: string; text: string }[]) ?? []}
         images={imageUrls}
       />
     </main>

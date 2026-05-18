@@ -9,19 +9,24 @@ type ImageEntry = {
   display_order: number
 }
 
+type OptionItem = { label: string; text: string }
+
 export default function QuestionEditor({
   questionId,
   initialQuestionText,
   initialExplanation,
+  initialOptions,
   images: initialImages,
 }: {
   questionId: number
   initialQuestionText: string
   initialExplanation: string
+  initialOptions: OptionItem[]
   images: ImageEntry[]
 }) {
   const [questionText, setQuestionText] = useState(initialQuestionText)
   const [explanation, setExplanation] = useState(initialExplanation)
+  const [options, setOptions] = useState<OptionItem[]>(initialOptions)
   const [images, setImages] = useState<ImageEntry[]>(initialImages)
   const [previewText, setPreviewText] = useState(false)
   const [previewExp, setPreviewExp] = useState(false)
@@ -38,7 +43,7 @@ export default function QuestionEditor({
       const res = await fetch(`/api/questions/${questionId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question_text: questionText, explanation: explanation || null }),
+        body: JSON.stringify({ question_text: questionText, explanation: explanation || null, options }),
       })
       setSaveStatus(res.ok ? 'saved' : 'error')
     } catch {
@@ -143,6 +148,31 @@ export default function QuestionEditor({
           />
         )}
       </section>
+
+      {/* 選択肢 */}
+      {options.length > 0 && (
+        <section className="space-y-2">
+          <label className="text-xs font-semibold text-gray-500 uppercase tracking-widest">選択肢</label>
+          <div className="space-y-2">
+            {options.map((opt, i) => (
+              <div key={opt.label} className="flex items-start gap-3">
+                <span className="shrink-0 mt-2.5 inline-flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-semibold border border-indigo-100">
+                  {opt.label}
+                </span>
+                <textarea
+                  value={opt.text}
+                  onChange={(e) => {
+                    setOptions((prev) => prev.map((o, j) => j === i ? { ...o, text: e.target.value } : o))
+                    setSaveStatus('idle')
+                  }}
+                  rows={2}
+                  className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-y"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 保存ボタン */}
       <div className="flex items-center gap-4">

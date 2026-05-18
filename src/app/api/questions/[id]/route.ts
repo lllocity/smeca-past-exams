@@ -29,7 +29,7 @@ export async function PATCH(
     .from('questions')
     .update(result.update)
     .eq('id', questionId)
-    .select('id, question_text, explanation')
+    .select('id, question_text, explanation, options')
     .maybeSingle()
 
   if (error) {

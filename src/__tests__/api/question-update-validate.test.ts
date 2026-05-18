@@ -90,6 +90,61 @@ describe('validateQuestionUpdate', () => {
     })
   })
 
+  describe('options', () => {
+    const validOptions = [
+      { label: 'ア', text: '選択肢A' },
+      { label: 'イ', text: '選択肢B' },
+    ]
+
+    it('正常な配列は ok', () => {
+      const r = validateQuestionUpdate({ options: validOptions })
+      expect(r.ok).toBe(true)
+      if (r.ok) expect(r.update.options).toEqual(validOptions)
+    })
+
+    it('空配列は error', () => {
+      const r = validateQuestionUpdate({ options: [] })
+      expect(r.ok).toBe(false)
+    })
+
+    it('配列でない値は error', () => {
+      expect(validateQuestionUpdate({ options: 'ア' }).ok).toBe(false)
+      expect(validateQuestionUpdate({ options: {} }).ok).toBe(false)
+    })
+
+    it('label が空文字の要素は error', () => {
+      const r = validateQuestionUpdate({ options: [{ label: '', text: 'text' }] })
+      expect(r.ok).toBe(false)
+    })
+
+    it('text が文字列でない要素は error', () => {
+      const r = validateQuestionUpdate({ options: [{ label: 'ア', text: 123 }] })
+      expect(r.ok).toBe(false)
+    })
+
+    it('text が空文字は ok（空の選択肢を許容）', () => {
+      const r = validateQuestionUpdate({ options: [{ label: 'ア', text: '' }] })
+      expect(r.ok).toBe(true)
+    })
+
+    it('question_text と同時更新できる', () => {
+      const r = validateQuestionUpdate({ question_text: '問題', options: validOptions })
+      expect(r.ok).toBe(true)
+      if (r.ok) {
+        expect(r.update.question_text).toBe('問題')
+        expect(r.update.options).toEqual(validOptions)
+      }
+    })
+
+    it('余分なフィールドは除去される（label と text のみ保持）', () => {
+      const r = validateQuestionUpdate({
+        options: [{ label: 'ア', text: '選択肢A', extra: 'ignored' }],
+      })
+      expect(r.ok).toBe(true)
+      if (r.ok) expect(r.update.options![0]).toEqual({ label: 'ア', text: '選択肢A' })
+    })
+  })
+
   describe('未知フィールドは無視される', () => {
     it('余分なフィールドがあっても question_text が有効なら ok', () => {
       const r = validateQuestionUpdate({ question_text: '問題', unknown_field: 'xxx' })
