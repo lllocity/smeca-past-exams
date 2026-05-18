@@ -102,7 +102,7 @@ export default async function QuestionPermalinkPage({
         <div className="space-y-2">
           {imageUrls.map((url, i) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={url} alt={`問題図 ${i + 1}`} className="w-full rounded-xl border border-gray-100" />
+            <img key={i} src={url} alt={`問題図 ${i + 1}`} className="max-w-[600px] w-full rounded-xl border border-gray-100" />
           ))}
         </div>
       )}
