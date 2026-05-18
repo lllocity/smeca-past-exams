@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import ReactMarkdown from 'react-markdown'
+import MarkdownRenderer from '@/components/MarkdownRenderer'
 import type { Database } from '@/lib/supabase/types'
 import { createClient } from '@/lib/supabase/client'
 
@@ -248,7 +248,7 @@ export default function QuizSession({
 
       {/* 問題文 */}
       <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed bg-white rounded-xl border border-gray-100 p-4">
-        <ReactMarkdown>{question!.question_text}</ReactMarkdown>
+        <MarkdownRenderer>{question!.question_text}</MarkdownRenderer>
       </div>
 
       {/* 問題画像 */}
@@ -303,7 +303,7 @@ export default function QuizSession({
           </div>
           {question!.explanation && (
             <div className="prose prose-sm max-w-none text-gray-700">
-              <ReactMarkdown>{question!.explanation}</ReactMarkdown>
+              <MarkdownRenderer>{question!.explanation}</MarkdownRenderer>
             </div>
           )}
         </div>

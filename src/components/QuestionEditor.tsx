@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
+import MarkdownRenderer from '@/components/MarkdownRenderer'
 
 type ImageEntry = {
   id: number
@@ -107,7 +107,7 @@ export default function QuestionEditor({
         </div>
         {previewText ? (
           <div className="prose prose-sm max-w-none bg-white border border-gray-100 rounded-xl p-4 min-h-[120px]">
-            <ReactMarkdown>{questionText}</ReactMarkdown>
+            <MarkdownRenderer>{questionText}</MarkdownRenderer>
           </div>
         ) : (
           <textarea
@@ -132,7 +132,7 @@ export default function QuestionEditor({
         </div>
         {previewExp ? (
           <div className="prose prose-sm max-w-none bg-white border border-gray-100 rounded-xl p-4 min-h-[80px]">
-            <ReactMarkdown>{explanation}</ReactMarkdown>
+            <MarkdownRenderer>{explanation}</MarkdownRenderer>
           </div>
         ) : (
           <textarea

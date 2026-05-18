@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import ReactMarkdown from 'react-markdown'
+import MarkdownRenderer from '@/components/MarkdownRenderer'
 import { createClient } from '@/lib/supabase/server'
 
 const VALID_SUBJECTS = new Set(['ECO', 'FIN', 'MGT', 'OPS', 'LAW', 'MIS', 'SME'])
@@ -94,7 +94,7 @@ export default async function QuestionPermalinkPage({
 
       {/* 問題文 */}
       <div className="prose prose-sm max-w-none text-gray-800 leading-relaxed bg-white rounded-xl border border-gray-100 p-4">
-        <ReactMarkdown>{question.question_text}</ReactMarkdown>
+        <MarkdownRenderer>{question.question_text}</MarkdownRenderer>
       </div>
 
       {/* 問題画像 */}
@@ -134,7 +134,7 @@ export default async function QuestionPermalinkPage({
             {isAllCorrect ? '全員正解問題' : `正解: ${question.correct_answer}`}
           </div>
           <div className="prose prose-sm max-w-none text-gray-700">
-            <ReactMarkdown>{question.explanation}</ReactMarkdown>
+            <MarkdownRenderer>{question.explanation}</MarkdownRenderer>
           </div>
         </div>
       )}
